@@ -543,7 +543,6 @@ def resolve(name, url):
             stream_url = flink
 
     elif '//evfancy' in url:
-        referer = 'https://smartermuver.com/'
         '''https://f6hmx3jswd83sq.librarywhispering.com/hls/039beb93983959e1-0e2a3bb76283a966aa758ab00478ae20c590853264d6b277a7808d282b7c0109/live.m3u8'''
         # 039beb93983959e1-0e2a3bb76283a966aa758ab00478ae20c590853264d6b277a7808d282b7c0109
         #'https://locatedinfain.com/embed3.php?player=desktop&live=do5'
@@ -556,7 +555,7 @@ def resolve(name, url):
             embed = six.ensure_str(client.request(getembed))
             embed = re.findall(r'''document.write.+?src=['"](.+?player)=''', embed, re.DOTALL)[0]
             host = '{}=desktop&live={}'.format(embed, str(vid))
-            data = six.ensure_str(client.request(host, referer=referer))
+            data = six.ensure_str(client.request(host, referer=url))
             try:
                 link = re.findall(r'''return\((\[.+?\])\.join''', data, re.DOTALL)[0]
             except IndexError:
@@ -574,8 +573,8 @@ def resolve(name, url):
                                                                           quote(
                                                                               'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36'))
 
-    elif '//istorm' in url or '//glisco' in url:
-        referer = 'https://istorm.live/' if 'istorm' in url else 'https://eyespeeled.click/'
+    elif '//istorm' in url or '//glisco' in url or '//zvision' in url:
+        referer = '{uri.scheme}://{uri.netloc}/'.format(uri=urlparse(url))
         r = six.ensure_str(client.request(url))
         # xbmc.log("RRRRRR: {}".format(r))
         if 'fid=' in r:
@@ -597,6 +596,7 @@ def resolve(name, url):
             # r = six.ensure_str(client.request(url))
             frame = client.parseDOM(r, 'iframe', ret='src')[-1]
             xbmc.log('FRAME: {}'.format(frame))
+            referer = '{uri.scheme}://{uri.netloc}/'.format(uri=urlparse(frame))
             data = six.ensure_str(client.request(frame, referer=url, output=url))
             # xbmc.log("DATAAAA: {}".format(data))
             if 'eval' in data:
@@ -608,7 +608,7 @@ def resolve(name, url):
                 rr = data
             if 'player.src({src:' in rr:
                 flink = re.findall(r'''player.src\(\{src:\s*["'](.+?)['"]\,''', rr, re.DOTALL)[0]
-            elif 'hlsjsConfig' in rr:
+            elif 'hlsjsConfig' in rr and not 'new Clappr' in rr:
                 flink = re.findall(r'''src=\s*["'](.+?)['"]''', rr, re.DOTALL)[0]
             elif 'new Clappr' in rr:
                 flink = re.findall(r'''source\s*:\s*["'](.+?)['"]\,''', str(rr), re.DOTALL)[0]
